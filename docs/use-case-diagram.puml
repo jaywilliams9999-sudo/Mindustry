@@ -1,0 +1,32 @@
+@startuml use-case-diagram
+' Use case diagram for Requirements and Use Cases (A1b)
+' Render: java -jar plantuml.jar docs/use-case-diagram.puml
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle stick
+skinparam shadowing false
+
+actor "Player" as player <<primary>>
+actor "GitHub" as github <<supporting>>
+actor "Mod Author" as modauthor <<offstage>>
+
+rectangle "Mindustry" {
+  usecase "Launch to Sector" as UC1
+  usecase "Research Technology" as UC2
+  usecase "Join Multiplayer Game" as UC3
+  usecase "Install Mod from Browser" as UC4
+}
+
+player -- UC1
+player -- UC2
+player -- UC3
+player -- UC4
+
+UC3 -- github
+UC4 -- github
+
+note "Offstage: never interacts with\nthe system; cares that the browser\nlists and installs their mod correctly" as N1
+modauthor .. N1
+N1 .. UC4
+@enduml
