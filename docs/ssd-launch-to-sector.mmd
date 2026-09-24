@@ -1,0 +1,10 @@
+sequenceDiagram
+    title SSD: Launch to Sector
+    actor Player
+    participant S as :MindustrySystem
+    Player->>S: selectSector(sectorId)
+    S-->>Player: sector info, launch availability
+    Player->>S: requestLaunch(targetSectorId)
+    S-->>Player: source sector, loadouts, launch cost, source items
+    Player->>S: confirmLaunch(loadoutId)
+    S-->>Player: target sector map with Player's core

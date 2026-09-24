@@ -1,0 +1,12 @@
+sequenceDiagram
+    title SSD: Research Technology
+    actor Player
+    participant S as :MindustrySystem
+    Player->>S: openTechTree(planetId)
+    S-->>Player: tech tree, items owned across captured sectors
+    loop more technologies to inspect
+        Player->>S: inspectTechnology(technologyId)
+        S-->>Player: name, item cost, amount owned of each item
+    end
+    Player->>S: research(technologyId)
+    S-->>Player: research progress, unlocked status

@@ -1,0 +1,8 @@
+sequenceDiagram
+    title SSD: Join Multiplayer Game
+    actor Player
+    participant S as :MindustrySystem
+    Player->>S: openServerBrowser()
+    S-->>Player: servers (name, map, player count, version)
+    Player->>S: joinServer(serverAddress)
+    S-->>Player: server's map, connection confirmed
