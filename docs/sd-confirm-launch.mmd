@@ -1,0 +1,48 @@
+sequenceDiagram
+    title Interaction Diagram: confirmLaunch(loadoutId), expands SSD 1 (Launch to Sector)
+    actor Player
+    participant LD as :LaunchLoadoutDialog
+    participant PD as :PlanetDialog
+    participant U as universe :Universe
+    participant SC as loadout :Schematic
+    participant FROM as from :Sector
+    participant EV as Events (arc.Events)
+    participant C as control :Control
+    participant UI as ui :UI
+    participant W as world :World
+    participant L as logic :Logic
+    participant SV as control.saves :Saves
+
+    Player->>LD: confirmLaunch(loadoutId) [click "Launch"]
+    LD->>PD: confirm.run() [lambda passed to loadouts.show(...)]
+    PD->>U: getLastLoadout()
+    U-->>PD: loadout
+    PD->>SC: requirements()
+    SC-->>PD: ItemSeq cost
+    PD->>FROM: removeItems(loadout.requirements())
+    PD->>U: getLaunchResources()
+    U-->>PD: ItemSeq extra
+    PD->>FROM: removeItems(extra)
+    PD->>EV: fire(new SectorLaunchLoadoutEvent(sector, from, loadout))
+    alt no core or "skipcoreanimation" setting is on
+        PD->>C: playSector(from, sector)
+    else play launch animation first
+        PD->>PD: hide(), renderer.showLaunch(core)
+        PD->>C: playSector(from, sector) [after launchDuration]
+    end
+    C->>UI: loadAnd(Runnable)
+    UI-->>C: runs the Runnable after the loading screen shows
+    alt sector has no save (first landing)
+        C->>C: playNewSector(origin, sector, reloader)
+        C->>W: loadSector(sector, params)
+        W->>W: setSectorRules(), planet generator places tiles and core
+        Note over C: sector.info.origin = origin
+        C->>EV: fire(new RulesLoadEvent(state.rules))
+        C->>L: play()
+        L->>EV: fire(new PlayEvent())
+        C->>SV: saveSector(sector)
+        C->>EV: fire(new SectorLaunchEvent(sector))
+    else sector already has a save
+        C->>C: slot.load(world.makeSectorContext(sector))
+    end
+    C-->>Player: target sector map with Player's core

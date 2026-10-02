@@ -1,0 +1,69 @@
+---
+title: Mindustry Logical Architecture
+---
+flowchart TB
+    subgraph PLAT["Platform layer (Gradle modules)"]
+        direction LR
+        desktop["desktop<br/>DesktopLauncher, steam.SNet"]
+        server["server<br/>ServerLauncher, ServerControl"]
+        android["android<br/>AndroidLauncher"]
+        ios["ios<br/>IOSLauncher"]
+    end
+
+    subgraph PRES["Presentation layer (core/src/mindustry)"]
+        direction LR
+        ui["ui<br/>dialogs.ResearchDialog, dialogs.PlanetDialog,<br/>dialogs.LaunchLoadoutDialog, fragments.*"]
+        input["input<br/>InputHandler, DesktopInput, MobileInput"]
+        graphics["graphics<br/>Pal, MinimapRenderer, BlockRenderer"]
+        editor["editor<br/>MapEditor, MapEditorDialog"]
+    end
+
+    subgraph APP["Application layer: mindustry.core"]
+        direction LR
+        core["core<br/>ClientLauncher, Control, Logic, World,<br/>NetServer, NetClient, UI, Renderer"]
+    end
+
+    subgraph DOM["Domain layer"]
+        direction LR
+        world["world<br/>Block, Tile, Build, blocks.*"]
+        entities["entities<br/>comp.BuildingComp, comp.UnitComp"]
+        type["type<br/>Sector, Planet, UnitType, ItemSeq"]
+        content["content<br/>TechTree, Blocks, Items, Planets"]
+        game["game<br/>Team, Rules, Universe, EventType, Schematic"]
+        ctype["ctype<br/>UnlockableContent, Content"]
+        other["logic, ai, maps"]
+    end
+
+    subgraph SVC["Technical services layer"]
+        direction LR
+        io["io<br/>SaveIO, TypeIO"]
+        net["net<br/>Net, Net.NetProvider, ArcNetProvider"]
+        mod["mod<br/>Mods, ContentParser"]
+        misc["audio, async, service"]
+    end
+
+    subgraph FW["Framework (external library)"]
+        arc["Arc<br/>arc.Core, arc.Events, arc.scene, arc.graphics"]
+    end
+
+    vars(["Vars<br/>global service locator<br/>import static mindustry.Vars.*<br/>in 339 of 823 files"])
+
+    PLAT --> PRES
+    PLAT --> APP
+    PRES --> APP
+    PRES --> DOM
+    APP --> DOM
+    APP --> SVC
+    DOM --> SVC
+    SVC --> FW
+    DOM --> FW
+    PRES --> FW
+
+    world -. "violation: 53 files import mindustry.ui" .-> ui
+    world -. "violation: 9 files import mindustry.input" .-> input
+    core -. "violation: Control, UI import mindustry.ui" .-> ui
+
+    PRES ~~~ vars
+    vars ~~~ DOM
+
+    linkStyle 10,11,12 stroke:#d33,stroke-width:2px,stroke-dasharray:6 4

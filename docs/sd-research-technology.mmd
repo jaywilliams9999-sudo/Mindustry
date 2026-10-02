@@ -1,0 +1,47 @@
+sequenceDiagram
+    title Interaction Diagram: research(technologyId), expands SSD 2 (Research Technology)
+    actor Player
+    participant V as :ResearchDialog.View
+    participant IS as items :ItemSeq<br/>(anonymous subclass in<br/>ResearchDialog.rebuildItems)
+    participant S as :Sector
+    participant TN as node :TechNode
+    participant UC as node.content :UnlockableContent
+    participant EV as Events (arc.Events)
+    participant ST as Core.settings :Settings
+
+    Player->>V: research(technologyId) [click on node button]
+    V->>V: canSpend(node)
+    alt net.client() or nothing affordable
+        V-->>Player: button disabled, nothing happens
+    else can spend
+        V->>V: spend(node)
+        loop for each requirement i of node.requirements
+            V->>IS: get(req.item)
+            IS-->>V: amount owned across captured sectors
+            Note over V: used = min(req.amount - finishedRequirements[i].amount, owned)
+            V->>IS: remove(req.item, used)
+            IS->>IS: add(item, -used)
+            loop each cached Sector except the one being played
+                IS->>S: removeItem(item, toRemove)
+                S->>S: addItems(seq) then saveInfo()
+            end
+            opt items still owed and a sector is being played
+                IS->>S: removeItem(item, toRemove) [current sector]
+            end
+            V->>V: finishedRequirements[i].amount += used
+        end
+        alt every requirement complete
+            V->>V: unlock(node)
+            V->>UC: unlock()
+            UC->>ST: put(name + "-unlocked", true)
+            UC->>EV: fire(new UnlockEvent(this))
+            loop each parent TechNode
+                V->>UC: parent.content.unlock()
+            end
+            V->>EV: fire(new ResearchEvent(node.content))
+        end
+        V->>TN: save()
+        TN->>ST: put("req-" + content.name + "-" + item.name, amount)
+        V->>V: rebuild(shine), itemDisplay.rebuild(items, usedShine)
+        V-->>Player: research progress, unlocked status
+    end
